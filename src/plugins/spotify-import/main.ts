@@ -5,34 +5,20 @@ import { createBackend } from '@/utils';
 
 import { openImportWindow, pushImportState } from './import-window';
 import { extractVideoId } from './match-track';
-import { fetchSpotifyPlaylist } from './spotify';
+import {
+  extractPlaylistId,
+  fetchSpotifyPlaylist,
+  type SpotifyPlaylist,
+} from './spotify';
 
 import type { BackendContext } from '@/types/contexts';
 
 const OPEN_SHORTCUT = 'Alt+Shift+S';
 
-// Sequential on purpose: each call opens its own one-shot
-// ipcMain.once('peard:search-results', …) listener (see
-// song-controls.ts's search()) — running them concurrently would risk one
-// call's result racing into another's await. A playlist import isn't
-// latency-sensitive enough to need parallelism here.
-async function importPlaylist(
-  url: string,
+async function runImport(
+  playlist: SpotifyPlaylist,
   songControls: ReturnType<typeof getSongControls>,
 ): Promise<void> {
-  pushImportState({ phase: 'fetching' });
-
-  let playlist: Awaited<ReturnType<typeof fetchSpotifyPlaylist>>;
-  try {
-    playlist = await fetchSpotifyPlaylist(url);
-  } catch (err) {
-    pushImportState({
-      phase: 'error',
-      message: err instanceof Error ? err.message : String(err),
-    });
-    return;
-  }
-
   const log: { ok: boolean; title: string; artist: string }[] = [];
   let found = 0;
 
@@ -60,29 +46,55 @@ async function importPlaylist(
     log.push({ ok: !!videoId, title: track.title, artist: track.artist });
   }
 
-  pushImportState({
-    phase: 'done',
-    found,
-    total: playlist.tracks.length,
-    log,
-  });
+  pushImportState({ phase: 'done', found, total: playlist.tracks.length, log });
 }
 
 export const backend = createBackend({
   start(ctx: BackendContext<{ enabled: boolean }>) {
     const songControls = getSongControls(ctx.window);
     let running = false;
+    // Caches the last previewed playlist so clicking "Importer" doesn't
+    // re-fetch Spotify — the preview step already did the one real request.
+    let cached: { id: string; playlist: SpotifyPlaylist } | null = null;
+
+    const preview = async (url: string) => {
+      const id = extractPlaylistId(url);
+      if (!id || id === cached?.id) return;
+      try {
+        const playlist = await fetchSpotifyPlaylist(url);
+        cached = { id, playlist };
+        pushImportState({
+          phase: 'preview',
+          name: playlist.name,
+          coverUrl: playlist.coverUrl,
+          total: playlist.tracks.length,
+        });
+      } catch (err) {
+        pushImportState({
+          phase: 'error',
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    };
+
+    const confirm = () => {
+      if (running || !cached) return;
+      running = true;
+      runImport(cached.playlist, songControls).finally(() => {
+        running = false;
+      });
+    };
 
     globalShortcut.register(OPEN_SHORTCUT, () => {
-      openImportWindow(ctx.window, (url) => {
-        // shortcut: a second "Importer" click while one is already running
-        // is ignored rather than queued/cancelled — simplest safe behavior;
-        // the button is already disabled client-side while running anyway.
-        if (running) return;
-        running = true;
-        importPlaylist(url, songControls).finally(() => {
-          running = false;
-        });
+      cached = null;
+      openImportWindow(ctx.window, {
+        // Called repeatedly while the window is open and idle (clipboard
+        // polling lives in the renderer, see import-window.ts) — cheap no-op
+        // via the `id === cached?.id` guard above when nothing changed.
+        onLinkDetected: (url) => {
+          if (!running) preview(url);
+        },
+        onConfirm: confirm,
       });
     });
   },

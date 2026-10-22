@@ -19,7 +19,11 @@ const PLAYLIST_ID_RE =
   /(?:open\.spotify\.com\/playlist\/|spotify:playlist:)([a-zA-Z0-9]+)/;
 
 export type SpotifyTrack = { title: string; artist: string };
-export type SpotifyPlaylist = { name: string; tracks: SpotifyTrack[] };
+export type SpotifyPlaylist = {
+  name: string;
+  coverUrl: string | null;
+  tracks: SpotifyTrack[];
+};
 
 export function extractPlaylistId(input: string): string | null {
   const trimmed = input.trim();
@@ -60,6 +64,7 @@ export async function fetchSpotifyPlaylist(
 
   type Entity = {
     name?: string;
+    coverArt?: { sources?: { url?: string }[] };
     trackList?: { title?: string; subtitle?: string }[];
   };
   type Parsed = {
@@ -81,6 +86,7 @@ export async function fetchSpotifyPlaylist(
 
   return {
     name: entity.name ?? 'Playlist Spotify',
+    coverUrl: entity.coverArt?.sources?.[0]?.url ?? null,
     tracks: entity.trackList.map((t) => ({
       title: t.title ?? '',
       artist: t.subtitle ?? '',
