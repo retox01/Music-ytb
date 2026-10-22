@@ -949,6 +949,10 @@
       "description": "Automatically Skips non-music parts like intro/outro or parts of music videos where the song isn't playing",
       "name": "SponsorBlock"
     },
+    "spotify-import": {
+      "description": "Import a public Spotify playlist's tracks into the queue by pasting its share link, no Spotify account needed. Alt+Shift+S opens the import window",
+      "name": "Spotify Playlist Import"
+    },
     "synced-lyrics": {
       "description": "Provides synced lyrics to songs, using providers like LRClib.",
       "errors": {
