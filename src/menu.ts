@@ -9,6 +9,7 @@ import {
   shell,
 } from 'electron';
 import is from 'electron-is';
+import electronUpdater from 'electron-updater';
 import { satisfies } from 'semver';
 import { availableLanguages, languageLabels } from 'virtual:i18n';
 import { allPlugins } from 'virtual:plugins';
@@ -33,12 +34,14 @@ const inAppMenuActive = await config.plugins.isEnabled('in-app-menu');
 const pluginEnabledMenu = async (
   plugin: string,
   label = '',
-  description?: string ,
+  description?: string,
   isNew = false,
   hasSubmenu = false,
   refreshMenu: (() => void) | undefined = undefined,
 ): Promise<Electron.MenuItemConstructorOptions> => {
-  const betterLyricsConfig = config.plugins.getOptions<{ activeTheme?: string }>('better-lyrics');
+  const betterLyricsConfig = config.plugins.getOptions<{
+    activeTheme?: string;
+  }>('better-lyrics');
   const isGlassyTheme = isGlassyMergeTheme(betterLyricsConfig?.activeTheme);
 
   const lockedPlugins = ['better-lyrics'];
@@ -60,7 +63,8 @@ const pluginEnabledMenu = async (
     sublabel: isNew ? t('main.menu.plugins.new') : undefined,
     toolTip: description,
     type: 'checkbox',
-    visible: (!isGlassyTheme && plugin === 'album-color-theme-modded') ? false : true,
+    visible:
+      !isGlassyTheme && plugin === 'album-color-theme-modded' ? false : true,
 
     // 3. Hiển thị dấu tích: Nếu Locked thì luôn True, ngược lại thì lấy theo config
     checked: isLocked ? true : await config.plugins.isEnabled(plugin),
@@ -110,7 +114,7 @@ const openAboutWindow = (parentWin: BrowserWindow) => {
     width: 600,
     height: 700,
     resizable: false,
-    title: "About Glassy Music",
+    title: 'About Glassy Music',
     minimizable: false,
     maximizable: false,
     autoHideMenuBar: true,
@@ -129,14 +133,28 @@ const openAboutWindow = (parentWin: BrowserWindow) => {
   });
 
   // Nội dung HTML/CSS nạp từ file riêng
-  const htmlContent = aboutHtmlRaw.replace('${packageJson.version}', packageJson.version);
+  const htmlContent = aboutHtmlRaw.replace(
+    '${packageJson.version}',
+    packageJson.version,
+  );
 
   // Load chuỗi HTML dưới dạng Data URI
-  aboutWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+  aboutWindow.loadURL(
+    `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`,
+  );
 
   // Handle close animation at the Electron level (compositor, not renderer)
   aboutWindow.webContents.on('page-title-updated', (event, title) => {
     event.preventDefault();
+    if (title === '__GLASSY_CHECK_UPDATE__') {
+      // Same no-preload "signal via document.title" trick as the close
+      // button below — this window has no IPC bridge set up, and adding one
+      // just for this would be more code than reusing the existing hack.
+      // Feedback is implicit: an update window pops up (see src/index.ts's
+      // autoUpdater listeners) if one is found; nothing to show otherwise.
+      electronUpdater.autoUpdater.checkForUpdates();
+      return;
+    }
     if (title !== '__GLASSY_CLOSE__') return;
     if (!aboutWindow || aboutWindow.isDestroyed()) return;
 
@@ -167,8 +185,6 @@ const openAboutWindow = (parentWin: BrowserWindow) => {
     aboutWindow = null;
   });
 };
-
-
 
 export const mainMenuTemplate = async (
   win: BrowserWindow,
@@ -421,40 +437,40 @@ export const mainMenuTemplate = async (
         },
         ...((is.windows() || is.linux()
           ? [
-            {
-              label: t('main.menu.options.submenu.hide-menu.label'),
-              type: 'checkbox',
-              checked: config.get('options.hideMenu'),
-              click(item) {
-                config.setMenuOption('options.hideMenu', item.checked);
-                if (item.checked && !config.get('options.hideMenuWarned')) {
-                  dialog.showMessageBox(win, {
-                    type: 'info',
-                    title: t(
-                      'main.menu.options.submenu.hide-menu.dialog.title',
-                    ),
-                    message: t(
-                      'main.menu.options.submenu.hide-menu.dialog.message',
-                    ),
-                  });
-                }
+              {
+                label: t('main.menu.options.submenu.hide-menu.label'),
+                type: 'checkbox',
+                checked: config.get('options.hideMenu'),
+                click(item) {
+                  config.setMenuOption('options.hideMenu', item.checked);
+                  if (item.checked && !config.get('options.hideMenuWarned')) {
+                    dialog.showMessageBox(win, {
+                      type: 'info',
+                      title: t(
+                        'main.menu.options.submenu.hide-menu.dialog.title',
+                      ),
+                      message: t(
+                        'main.menu.options.submenu.hide-menu.dialog.message',
+                      ),
+                    });
+                  }
+                },
               },
-            },
-          ]
+            ]
           : []) satisfies Electron.MenuItemConstructorOptions[]),
         ...((is.windows() || is.macOS()
           ? // Only works on Win/Mac
-          // https://www.electronjs.org/docs/api/app#appsetloginitemsettingssettings-macos-windows
-          [
-            {
-              label: t('main.menu.options.submenu.start-at-login'),
-              type: 'checkbox',
-              checked: config.get('options.startAtLogin'),
-              click(item) {
-                config.setMenuOption('options.startAtLogin', item.checked);
+            // https://www.electronjs.org/docs/api/app#appsetloginitemsettingssettings-macos-windows
+            [
+              {
+                label: t('main.menu.options.submenu.start-at-login'),
+                type: 'checkbox',
+                checked: config.get('options.startAtLogin'),
+                click(item) {
+                  config.setMenuOption('options.startAtLogin', item.checked);
+                },
               },
-            },
-          ]
+            ]
           : []) satisfies Electron.MenuItemConstructorOptions[]),
         {
           label: t('main.menu.options.submenu.tray.label'),
@@ -588,25 +604,29 @@ export const mainMenuTemplate = async (
               checked: config.get('options.disableMinSize'),
               click(item: MenuItem) {
                 if (item.checked) {
-                  dialog.showMessageBox(win, {
-                    type: 'warning',
-                    title: 'Disable Minimum Window Size',
-                    message: 'Disabling this can make the app freely adjust window size, but making the window size too small can cause layout breaking and may require restarting the app to fix the issue. Only turn this off if you know what you are doing.',
-                    buttons: ['Cancel', 'Turn Off'],
-                    defaultId: 0,
-                    cancelId: 0,
-                  }).then(({ response }) => {
-                    if (response === 1) {
-                      config.setMenuOption('options.disableMinSize', true);
-                      dialog.showMessageBox(win, {
-                        type: 'info',
-                        title: 'Restart Required',
-                        message: 'A restart is required for this setting to apply.',
-                      });
-                    } else {
-                      item.checked = false;
-                    }
-                  });
+                  dialog
+                    .showMessageBox(win, {
+                      type: 'warning',
+                      title: 'Disable Minimum Window Size',
+                      message:
+                        'Disabling this can make the app freely adjust window size, but making the window size too small can cause layout breaking and may require restarting the app to fix the issue. Only turn this off if you know what you are doing.',
+                      buttons: ['Cancel', 'Turn Off'],
+                      defaultId: 0,
+                      cancelId: 0,
+                    })
+                    .then(({ response }) => {
+                      if (response === 1) {
+                        config.setMenuOption('options.disableMinSize', true);
+                        dialog.showMessageBox(win, {
+                          type: 'info',
+                          title: 'Restart Required',
+                          message:
+                            'A restart is required for this setting to apply.',
+                        });
+                      } else {
+                        item.checked = false;
+                      }
+                    });
                 } else {
                   config.setMenuOption('options.disableMinSize', false);
                   dialog.showMessageBox(win, {
@@ -651,25 +671,25 @@ export const mainMenuTemplate = async (
             { type: 'separator' },
             is.macOS()
               ? {
-                label: t(
-                  'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
-                ),
-                // Cannot use "toggleDevTools" role in macOS
-                click() {
-                  const { webContents } = win;
-                  if (webContents.isDevToolsOpened()) {
-                    webContents.closeDevTools();
-                  } else {
-                    webContents.openDevTools();
-                  }
-                },
-              }
+                  label: t(
+                    'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
+                  ),
+                  // Cannot use "toggleDevTools" role in macOS
+                  click() {
+                    const { webContents } = win;
+                    if (webContents.isDevToolsOpened()) {
+                      webContents.closeDevTools();
+                    } else {
+                      webContents.openDevTools();
+                    }
+                  },
+                }
               : {
-                label: t(
-                  'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
-                ),
-                role: 'toggleDevTools',
-              },
+                  label: t(
+                    'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
+                  ),
+                  role: 'toggleDevTools',
+                },
             {
               label: t(
                 'main.menu.options.submenu.advanced-options.submenu.edit-config-json',
@@ -788,10 +808,12 @@ export const mainMenuTemplate = async (
         {
           label: 'Resync Lyrics',
           click() {
-            win.webContents.executeJavaScript(`window.dispatchEvent(new Event('resize'));`, true);
-          }
+            win.webContents.executeJavaScript(
+              `window.dispatchEvent(new Event('resize'));`,
+              true,
+            );
+          },
         },
-
       ],
     },
     {
@@ -836,7 +858,7 @@ export const mainMenuTemplate = async (
         {
           label: t('main.menu.about'), // Hoặc hardcode chữ "About"
           click: () => openAboutWindow(win), // Gọi hàm mở cửa sổ custom
-        }
+        },
       ],
     },
   ];

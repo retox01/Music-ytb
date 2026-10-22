@@ -209,6 +209,29 @@
             text-shadow: 0 0 10px rgba(0, 242, 254, 0.6); /* Thêm hiệu ứng phát sáng */
         }
 
+        #checkUpdateBtn {
+            margin-top: 14px;
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            color: #00f2fe;
+            background: rgba(0, 242, 254, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #checkUpdateBtn:hover {
+            background: rgba(0, 242, 254, 0.22);
+        }
+
+        #checkUpdateBtn:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
         /* --- Changelog Box --- */
         .changelog-label {
             font-size: 15px;
@@ -436,7 +459,8 @@
         <div class="header">
             <h1>Glassy Music</h1>
             <div class="version-badge">v${packageJson.version}</div>
-            <div class="dev-by">Developed by <strong><a href="https://github.com/NanKillBro" target="_blank">NanKill</a></strong></div>
+            <div class="dev-by">Maintained by <strong><a href="https://github.com/retox01" target="_blank">retox01</a></strong></div>
+            <button type="button" id="checkUpdateBtn">🔄 Rechercher une mise à jour</button>
         </div>
 
         <div class="changelog-label">What's New</div>
@@ -444,307 +468,60 @@
         <div class="scroll-area">
         <div class="log-entry">
             <div class="log-header">
-                <span class="log-version">Version 4.1.0</span>
+                <span class="log-version">Version 4.1.4</span>
                 <span class="log-tag release">RELEASE</span>
             </div>
-
-            <div class="log-intro">
-                🎉 <strong>Thank you guys so much for 300 stars!</strong> This means a lot to me! GitHub says it's already been two months since my last release, so here's a new version!
-            </div>
-
-            <div class="log-section-title" style="margin-top: 0;">🔄 Updates</div>
+            <div class="log-section-title" style="margin-top: 0;">✨ Nouveautés</div>
             <ul>
-                <li>Upstreamed to commit <code>a883022</code></li>
-                <li>Updated Better Lyrics (New Engine) to version <code>3.0.0.2</code> <sup style="color:#00f2fe;">(4)</sup></li>
-                <li>Backported some compatible fixes and features from the New Engine to Better Lyrics (Old Engine).</li>
-                <li>Updated Better Lyrics Shaders to version <code>1.5.0</code></li>
+                <li>Fenêtre "À propos" propre, avec un bouton pour vérifier les mises à jour sans attendre.</li>
             </ul>
-
-            <div class="log-section-title">✨ New Features &amp; UI</div>
-            <ul>
-                <li>Added the <code>smooth-transition</code> plugin (inspired by <a href="https://github.com/pear-devs/pear-desktop/pull/4662" target="_blank">pear-desktop PR #4462</a>).</li>
-                <li>Added the crossfade plugin, which now works properly.</li>
-                <li>Added the <code>skip-ai-music</code> plugin from <a href="https://github.com/pear-devs/pear-desktop/pull/4646" target="_blank">pear-desktop PR #4646</a>.</li>
-                <li>You can now change Better Lyrics Shaders settings while using the Better Lyrics theme.</li>
-                <li>Added a new splash screen when opening the app, kind of like Discord's.</li>
-                <li>Added a button to download the currently playing track in its original quality.</li>
-                <li>Improved performance in a few areas. <sup style="color:#00f2fe;">(1)</sup></li>
-                <li>Some new features from the Better Lyrics and Better Lyrics Shaders updates aren't listed here.</li>
-            </ul>
-
-            <div class="log-section-title">🐛 Bug Fixes</div>
-            <ul>
-                <li>Fixed solid colors in the new player, which may be part of an A/B test. <sup style="color:#00f2fe;">(3)</sup></li>
-                <li>Fixed an issue that prevented opening the Better Lyrics (New Engine) options.</li>
-                <li>Fixed some issues with the Better Lyrics theme editor.</li>
-                <li>Fixed the search tab being misaligned. <sup style="color:#00f2fe;">(3)</sup></li>
-                <li>Fixed song info becoming offset in crossfade after using fullscreen lyrics without fullscreen.</li>
-                <li>Fixed the fullscreen bottom-hover behavior: hovering at the bottom now shows the player bar as usual.</li>
-            </ul>
-
-            <div class="log-section-title">📜 Other Changes</div>
-            <ul>
-                <li>Changed the sublabels for the Better Lyrics (Old Engine) and Better Lyrics (New Engine) options.</li>
-                <li>Changed the app ID from <code>glassy-music-nankill-mod</code> to <code>glassy-music-nankill</code>. <sup style="color:#00f2fe;">(2)</sup></li>
-                <li>Changed the WMClass from <code>nankill.xyz.glassymusic.mod</code> to <code>glassymusic.nankill</code>.</li>
-                <li>Disabled background throttling.</li>
-            </ul>
-
-            <div class="log-footnotes">
-                <p><strong>(1)</strong> The smooth progress bar is disabled by default because it caused frequent layout recalculations. The in-app menu was also improved (<a href="https://github.com/pear-devs/pear-desktop/pull/4671" target="_blank">pear-desktop PR #4671</a>), and only the active language is now loaded at startup (<a href="https://github.com/pear-devs/pear-desktop/pull/4674" target="_blank">pear-desktop PR #4674</a>).</p>
-                <p><strong>(2)</strong> This change may break some existing installations, so you may need to uninstall the app before updating to this version.</p>
-                <p><strong>(3)</strong> YTM changed something that broke these things, and this update fixes them.</p>
-                <p><strong>(4)</strong> It still has some UI bugs. I'll fix them in the next release.</p>
-            </div>
         </div>
         <div class="log-entry">
             <div class="log-header">
-                <span class="log-version">Version 4.0.0</span>
+                <span class="log-version">Version 4.1.2 — 4.1.3</span>
                 <span class="log-tag release">RELEASE</span>
             </div>
-
-            <div class="log-intro">
-                🎉 <strong>Thank you guys so much for 200 stars!</strong> This means a lot to me. No idea why my project has that many stars recently, but I decided to re-version the release so that future versions follow Semantic Versioning. So yeah, v4.0.0 is here guys! This update is bigger than normal.
-            </div>
-
-            <div class="log-section-title" style="margin-top: 0;">🔄 Updates</div>
+            <div class="log-section-title" style="margin-top: 0;">✨ Nouveautés</div>
             <ul>
-                <li>Upstreamed to commit <code>1e2aac5</code></li>
-                <li>Updated BL (New Engine) to version <code>2.4.0.3</code></li>
-                <li>Updated YDP to version <code>v1.8.1</code></li>
-            </ul>
-
-            <div class="log-section-title">✨ New Features &amp; UI</div>
-            <ul>
-                <li>Added new plugin: Better Lyrics Tacet <sup style="color:#00f2fe;">(1)</sup>, Pitch Shift</li>
-                <li>Added new scroll type: GlassyFlow Turbo <sup style="color:#00f2fe;">(2)</sup></li>
-                <li>Player speed plugin now has an option to change pitch</li>
-                <li>New UI for the Play Together popup</li>
-                <li>New UI for the top bar icon row</li>
-                <li>Better Lyrics now has 2 engine options: New Engine (still in development) and Old Engine (default). Allows you to change the scroll animation.</li>
-                <li>Some performance improvements <sup style="color:#00f2fe;">(2)</sup></li>
-            </ul>
-
-            <div class="log-section-title">🐛 Bug Fixes</div>
-            <ul>
-                <li>Fixed nav bar have solid color. <a href="https://github.com/NanKillBro/glassy-music-nankill/issues/14" target="_blank">#14</a> <sup style="color:#00f2fe;">(3)</sup></li>
-                <li>Fixed invisible arrow in Better Lyrics settings.</li>
-                <li>Fixed Toggling the Navigation plugin multiple times will spawn multiple controls. <a href="https://github.com/NanKillBro/glassy-music-nankill/issues/12" target="_blank">#12</a></li>
-                <li>Fixed Song/Video misaligned to the right <sup style="color:#00f2fe;">(3)</sup></li>
-            </ul>
-
-            <div class="log-section-title">📜 Other Changes</div>
-            <ul>
-                <li>Merge Theme no longer has a version.</li>
-                <li>Hovering over lyrics no longer makes them brighter, but scrolling still works.</li>
-                <li>Hovering at the bottom in fullscreen no longer makes the control bar appear; you now need to hover over the Better Lyrics Dock. <sup style="color:#00f2fe;">(4)</sup></li>
-                <li>"Instrumental Only" lyrics will now be hidden.</li>
-                <li>Moved font settings into the Better Lyrics plugin menu.</li>
-                <li>"Fullscreen lyrics without fullscreen" button now also shows up in the top bar row.</li>
-                <li>GlassyFlow no longer occasionally keeps past lyrics showing.</li>
-            </ul>
-
-            <div class="log-footnotes">
-                <p><strong>(1)</strong> Tacet is still experimental. You can use it for crossfade only if you want, but for separating voices, it may or may not work and can cause performance issues or freeze the app. Currently, only Windows supports using the GPU to separate voices. On Linux, it may use the CPU since the GPU doesn't work for some reason.</p>
-                <p><strong>(2)</strong> YTM recently changed something that made the app really laggy. This is my best attempt to improve performance against it, though some performance issues remain.</p>
-                <p><strong>(3)</strong> YTM changed something that broke things, and this update fixes it.</p>
-                <p><strong>(4)</strong> YouTube broke something, so I decided to turn the bug into a feature, lol.</p>
-            </div>
-        </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.10-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit <code>1a84f1d</code></li>
-                <li>Updated Better Lyrics to commit <code>8ec28ef</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v23</span> to <span style="color:#00f2fe">v24</span></li>
-                <li>Added new fullscreen UI</li>
-                <li>Added new Better Lyrics dock</li>
-                <li>Fixed issue where the artwork frame was stretched</li>
-                <li>Fixed crossfade recently not working</li>
-                <li>Fixed unison dock too low</li>
+                <li>Import de playlist Spotify : copie le lien, la fenêtre détecte la playlist toute seule (pochette, nom, nombre de titres) et importe en un clic — aucun compte Spotify requis.</li>
             </ul>
         </div>
         <div class="log-entry">
             <div class="log-header">
-                <span class="log-version">Version 3.12.9-beta</span>
-                <span class="log-tag">BETA</span>
+                <span class="log-version">Version 4.1.1</span>
+                <span class="log-tag release">RELEASE</span>
             </div>
+            <div class="log-section-title" style="margin-top: 0;">✨ Nouveautés</div>
             <ul>
-                <li>Upstreamed to commit <code>0c42c82</code></li>
-                <li>Updated Better Lyrics to commit <code>fdd3848</code></li>
-                <li>Updated Better Lyrics Shaders to commit <code>6b80f7f</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v22</span> to <span style="color:#00f2fe">v23</span></li>
-                <li>New option that allows users to customize themes in Better Lyrics Settings</li>
-                <li>New option that allows users to disable the minimum window size</li>
-                <li>New settings UI for some plugins and components</li>
-                <li>New plugin: YouTubeDiscordPresence (XFG16)</li>
-                <li>Replaced the adblocker plugin with do-not-track</li>
-                <li>Fixed the Unison dock</li>
-                <li>Fixed some toasts looking different</li>
-                <li>Fixed the big button for some users with the Comments tab</li>
-                <li>Fixed the source dock overlapping issue</li>
-                <li>Fixed blurry icons (I guess)</li>
+                <li>Widget de bureau façon Rainmeter (<code>Alt+Shift+W</code>) : paroles animées, contrôles, vidéo intégrée, épinglable au-dessus ou derrière les autres fenêtres.</li>
+                <li>Fermer la fenêtre principale ne coupe plus la musique : elle se cache, le mode éco s'active tout seul.</li>
+                <li>Mise à jour automatique en arrière-plan, avec une fenêtre de progression.</li>
             </ul>
         </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.8-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit: <code style="">49130f8</code></li>
-                <li>Updated Better Lyrics to commit <code>0b34557</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v21</span> to <span style="color:#00f2fe">v22</span></li>
-                <li>New GlassyFlow v5</li>
-                <li>New Better Lyrics Settings UI</li>
-                <li>New Fonts and Size settings</li>
-                <li>New AM Lyrics effect</li>
-                <li>New redesign search box, user menu, settings menu</li>
-                <li>Fixed in-app-menu turn off by default on Linux</li>
-                <li>Fixed Better Lyrics export identity doesn't work</li>
-                <li>Fixed crossfade artwork on cover and backgroud only works sometime</li>
-            </ul>
         </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.7-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit: <code style="">0b3dab6</code></li>
-                <li>Updated Better Lyrics to <code>v2.3.0-canary 1</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v20</span> to <span style="color:#00f2fe">v21</span></li>
-                <li>New share UI and toast UI</li>
-                <li>New Colors UI</li>
-                <li>New MacOS icons</li>
-                <li>New fullscreen lyrics without fullscreen</li>
-                <li>New Resync Lyrics button</li>
-                <li>New Crossfade animated artwork</li>
-                <li>Fixed text alignment on different languages</li>
-                <li>Fixed share menu and add to playlist menu doesn't have animation</li>
-                <li>Fixed crossfade artwork sometime not work or weird behavior</li>
-            </ul>
-        </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.6-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit: <code style="">6aa7cdb</code></li>
-                <li>Updated Better Lyrics to commit: <code style="">baf075d</code></li>
-                <li>Updated Better Lyrics Shaders to commit: <code style="">6ce176e</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v19</span> to <span style="color:#00f2fe">v20</span></li>
-                <li>New tabs UI</li>
-                <li>Remove old scroll effect, new GlassyFlow v4</li>
-                <li>Fixed static lyrics not unblurring</li>
-            </ul>
-        </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.5-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit: <code style="">c583e90</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v18</span> to <span style="color:#00f2fe">v19</span></li>
-                <li>Updated Better Lyrics to commit: <code style="">b8ca6de</code></li>
-                <li>Added new fixed spring scroll effect (delay)</li>
-                <li>Discord RPC Github URL changed</li>
-                <li>Fixed some part don't have animation</li>
-                <li>Fixed weird crossfade img</li>
-                <li>Fixed library button not showing up for premium users</li>
-            </ul>
-        </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.4-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit: <code style="">e3d870a</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v17</span> to <span style="color:#00f2fe">v18</span></li>
-                <li>Added AM spring scroll effect (with selectable options)</li>
-                <li>Redesigned the in-app menu</li>
-                <li>Added linear gradient styling to the top bar</li>
-                <li>More rounded corners across the UI</li>
-                <li>Fixed Discord RPC issue with 32-character limit</li>
-                <li>Updated README documentation</li>
-            </ul>
-        </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.3-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit: <code style="">3c67778</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v16</span> to <span style="color:#00f2fe">v17</span></li>
-                <li>Major UI Update (MT)</li>
-            </ul>
-        </div>
-        <div class="log-entry">
-            <div class="log-header">
-                <span class="log-version">Version 3.12.2-beta</span>
-                <span class="log-tag">BETA</span>
-            </div>
-            <ul>
-                <li>Upstreamed to commit: <code style="">658b3da</code></li>
-                <li>Updated Better Lyrics to <code>v2.2.0 stable</code></li>
-                <li>Updated Better Lyrics Shaders to <code>v1.1.4</code></li>
-                <li>Updated MERGE THEME from <span style="color:#00f2fe">v15</span> to <span style="color:#00f2fe">v16</span></li>
-                <li>Minor improvements and optimizations 🛠️</li>
-                <li>Removed Low Performance Mode for BLS 🗑️</li>
-            </ul>
-        </div>
-        <div class="log-entry">
-                <div class="log-header">
-                    <span class="log-version">Version 3.12.1-beta</span>
-                    <span class="log-tag">BETA</span>
-                </div>
-                <ul>
-                    <li>Based on commit: <code style="">f50025f</code></li>
-                    <li>Update Better Lyrics to <code>2.2.0.3-canary</code></li>
-                    <li>Update Better Lyric Shaders to <code>v1.1.3</code></li>
-                    <li>Update MERGE THEME from <span style="color:#00f2fe">v14</span> to <span style="color:#00f2fe">v15</span></li>
-                    <li>Add fade effect for main background (MT)</li>
-                    <li>Add <strong>animated artwork</strong> (BLS)</li>
-                    <li>Some performance fix and optimize (BL, U) 🚀</li>
-                </ul>
-            </div>
-            <div class="log-entry">
-                <div class="log-header">
-                    <span class="log-version">Version 3.12.0-beta</span>
-                    <span class="log-tag">BETA</span>
-                </div>
-                <ul>
-                    <li>Based on commit: <code style="">1d72d12</code></li>
-                    <li>✨ <strong>Rebrand the whole client</strong></li>
-                    <li>Add new <strong>NonStop plugin</strong> 🎵</li>
-                    <li>Add new <strong>Adblock</strong></li>
-                    <li>Add new <strong>Better Lyrics Shaders</strong></li>
-                    <li>Add Low Performance Mode (for BLS)</li>
-                    <li>Add <strong>Album Color Theme (Modded)</strong></li>
-                    <li>Update MERGE THEME from <span style="color:#00f2fe">V13</span> to <span style="color:#00f2fe">V14</span></li>
-                    <li>Update Betterlyrics to <code>v2.2.0.2-canary</code></li>
-                    <li>Fixed some small bugs and optimize 🐛</li>
-                    <li>Remove Update Check</li>
-                    <li>Remove MERGE THEME dynamic background</li>
-                </ul>
-            </div>
-            </div>
 
         <div class="credits">
-            Based on <strong><a href="https://github.com/pear-devs/pear-desktop" target="_blank">pear-desktop</a></strong> by <a href="#" style="pointer-events: none;">th-ch</a>.<br>
-            Source code available at <a href="https://github.com/NanKillBro/glassy-music-nankill" target="_blank">NanKillBro/glassy-music-nankill</a>
+            Based on <strong><a href="https://github.com/pear-devs/pear-desktop" target="_blank">pear-desktop</a></strong> by <a href="#" style="pointer-events: none;">th-ch</a>, forked from <a href="https://github.com/NanKillBro/glassy-music-nankill" target="_blank">NanKillBro/glassy-music-nankill</a>.<br>
+            Source code available at <a href="https://github.com/retox01/Music-ytb" target="_blank">retox01/Music-ytb</a>
         </div>
     </div>
     </div> <!-- /window-wrapper -->
 
     <script>
+        document.getElementById('checkUpdateBtn').addEventListener('click', () => {
+            const btn = document.getElementById('checkUpdateBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Recherche en cours…';
+            // No-preload window (see menu.ts): signal through document.title,
+            // the main process listens for this exact value and triggers the
+            // real check — a window pops up on its own if one is found.
+            document.title = '__GLASSY_CHECK_UPDATE__';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = '🔄 Rechercher une mise à jour';
+            }, 4000);
+        });
+
         document.getElementById('closeBtn').addEventListener('click', () => {
             const wrapper = document.querySelector('.window-wrapper');
             if (wrapper.classList.contains('closing')) return;

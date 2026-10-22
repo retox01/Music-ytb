@@ -47,7 +47,26 @@ const IMPORT_HTML = `<!DOCTYPE html>
     color: rgba(255, 255, 255, 0.95);
     -webkit-user-select: none;
   }
-  body { display: flex; flex-direction: column; gap: 14px; padding: 18px; height: 100%; }
+  body { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 18px; height: 100%; }
+
+  #btn-pin {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    opacity: 0.55;
+    cursor: pointer;
+  }
+  #btn-pin svg { width: 13px; height: 13px; fill: currentColor; }
+  #btn-pin.rw-pin-active { background: rgb(var(--spotify)); opacity: 1; }
   h1 { margin: 0; font-size: 15px; display: flex; align-items: center; gap: 8px; }
   h1 .dot { width: 9px; height: 9px; border-radius: 50%; background: rgb(var(--spotify)); flex: none; }
   p.hint { margin: 0; font-size: 11px; opacity: 0.55; line-height: 1.5; }
@@ -123,6 +142,7 @@ const IMPORT_HTML = `<!DOCTYPE html>
 </style>
 </head>
 <body>
+  <button type="button" id="btn-pin" class="rw-pin-active" title="Toujours au-dessus / normal"><svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg></button>
   <h1><span class="dot"></span>Importer une playlist Spotify</h1>
   <p class="hint">Copie le lien de partage d'une playlist Spotify <b>publique</b> (clic droit → Partager → Copier le lien) — détecté automatiquement ici, rien à coller.</p>
 
@@ -212,6 +232,14 @@ const IMPORT_HTML = `<!DOCTYPE html>
 
     confirmBtn.addEventListener('click', () => window.spotifyImport.confirm());
 
+    const pinBtn = document.getElementById('btn-pin');
+    let pinned = true; // matches the window opening alwaysOnTop by default
+    pinBtn.addEventListener('click', () => {
+      pinned = !pinned;
+      pinBtn.classList.toggle('rw-pin-active', pinned);
+      window.spotifyImport.toggleAlwaysOnTop(pinned);
+    });
+
     // Clipboard auto-detection: polling is the only reliable cross-platform
     // way to notice an external app's clipboard change (no OS "clipboard
     // changed" event is exposed to Electron) — 1.2s is frequent enough to
@@ -250,6 +278,7 @@ contextBridge.exposeInMainWorld('spotifyImport', {
   getClipboard: () => ipcRenderer.invoke('spotify-import:get-clipboard'),
   linkDetected: (url) => ipcRenderer.send('spotify-import:link-detected', url),
   confirm: () => ipcRenderer.send('spotify-import:confirm'),
+  toggleAlwaysOnTop: (on) => ipcRenderer.send('spotify-import:toggle-always-on-top', on),
 });
 `,
     'utf8',
@@ -277,6 +306,9 @@ export async function openImportWindow(
       callbacks.onLinkDetected(url),
     );
     ipcMain.on('spotify-import:confirm', () => callbacks.onConfirm());
+    ipcMain.on('spotify-import:toggle-always-on-top', (_event, on: boolean) => {
+      importWin?.setAlwaysOnTop(Boolean(on), 'screen-saver');
+    });
   }
 
   if (importWin && !importWin.isDestroyed()) {
@@ -289,6 +321,11 @@ export async function openImportWindow(
     parent: parent ?? undefined,
     show: false,
     autoHideMenuBar: true,
+    // Opens in front of everything by default (the pin button top-left lets
+    // the user turn this off) — this is a short-lived tool window, not a
+    // persistent overlay like the rainmeter-widget, so there's no "pinned
+    // behind" mode here, just on/off.
+    alwaysOnTop: true,
     backgroundColor: '#0f0f12',
     webPreferences: {
       preload: await getPreloadPath(),
