@@ -146,5 +146,35 @@ export const getSongControls = (win: BrowserWindow) => {
         });
         win.webContents.send('peard:search', query, params, continuation);
       }),
+
+    // Same request/response-over-IPC pattern as search() above (there's no
+    // "ask the renderer something and await its answer" primitive beyond
+    // this): the renderer calls YTM's own internal API via
+    // app.networkManager.fetch (see src/renderer.ts's 'peard:create-playlist'
+    // handler), the same client used for search, so auth/session cookies are
+    // handled the same way. VERIFIED against the real endpoint (live, via
+    // Chrome DevTools Protocol): creating a playlist while the app isn't
+    // signed into a Google account returns
+    // `{ error: { code: 401, status: 'UNAUTHENTICATED', message: '...' } }`
+    // — not a thrown exception, a normal resolved response shaped like that,
+    // so callers must check for `.error` themselves.
+    createPlaylist: (
+      title: string,
+      videoIds: string[],
+    ): Promise<{
+      playlistId?: string;
+      error?: { code: number; message: string; status: string };
+    }> =>
+      new Promise((resolve) => {
+        ipcMain.once('peard:create-playlist-result', (_, result) => {
+          resolve(
+            result as {
+              playlistId?: string;
+              error?: { code: number; message: string; status: string };
+            },
+          );
+        });
+        win.webContents.send('peard:create-playlist', title, videoIds);
+      }),
   };
 };

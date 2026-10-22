@@ -220,13 +220,13 @@ async function onApiLoaded() {
                 index:
                   queueInsertPosition === 'INSERT_AFTER_CURRENT_VIDEO'
                     ? queueItems.findIndex(
-                      (it) =>
-                        (
-                          it.playlistPanelVideoRenderer ||
-                          it.playlistPanelVideoWrapperRenderer
-                            ?.primaryRenderer.playlistPanelVideoRenderer
-                        )?.selected,
-                    ) + 1 || queueItemsLength
+                        (it) =>
+                          (
+                            it.playlistPanelVideoRenderer ||
+                            it.playlistPanelVideoWrapperRenderer
+                              ?.primaryRenderer.playlistPanelVideoRenderer
+                          )?.selected,
+                      ) + 1 || queueItemsLength
                     : queueItemsLength,
                 items: result.queueDatas
                   .map((it) =>
@@ -309,6 +309,46 @@ async function onApiLoaded() {
     },
   );
 
+  window.ipcRenderer.on(
+    'peard:create-playlist',
+    async (_, title: string, videoIds: string[]) => {
+      const app = document.querySelector<MusicPlayerAppElement>('ytmusic-app');
+      if (!app) {
+        window.ipcRenderer.send('peard:create-playlist-result', {
+          error: {
+            code: 0,
+            message: 'ytmusic-app introuvable',
+            status: 'INTERNAL',
+          },
+        });
+        return;
+      }
+
+      // Unlike /search, this endpoint REJECTS (throws) rather than resolving
+      // with an error payload when it fails (e.g. not signed in) — confirmed
+      // live: without this try/catch, the caller's ipcMain.once(…) promise
+      // (see song-controls.ts's createPlaylist()) never resolves at all.
+      try {
+        const result = await app.networkManager.fetch<
+          unknown,
+          { title: string; privacyStatus: string; videoIds: string[] }
+        >('/playlist/create', {
+          title,
+          privacyStatus: 'PRIVATE',
+          videoIds,
+        });
+        window.ipcRenderer.send('peard:create-playlist-result', result);
+      } catch (err) {
+        window.ipcRenderer.send(
+          'peard:create-playlist-result',
+          err && typeof err === 'object'
+            ? err
+            : { error: { code: 0, message: String(err), status: 'UNKNOWN' } },
+        );
+      }
+    },
+  );
+
   const video = document.querySelector('video')!;
   const audioContext = new AudioContext();
   const audioSource = audioContext.createMediaElementSource(video);
@@ -319,7 +359,7 @@ async function onApiLoaded() {
     version: 1,
     context: audioContext,
     source: audioSource,
-    element: video
+    element: video,
   };
 
   for (const [id, plugin] of Object.entries(getAllLoadedRendererPlugins())) {
@@ -401,12 +441,14 @@ async function onApiLoaded() {
     const style = document.createElement('style');
     style.textContent = `
       ytmusic-player-bar[is-mweb-player-bar-modernization-enabled] .middle-controls-buttons.ytmusic-player-bar, #like-button-renderer {
-        display: ${likeButtonsOptions === 'hide' ? 'none' : 'inherit'
-      } !important;
+        display: ${
+          likeButtonsOptions === 'hide' ? 'none' : 'inherit'
+        } !important;
       }
       ytmusic-player-bar[is-mweb-player-bar-modernization-enabled] .middle-controls.ytmusic-player-bar {
-        justify-content: ${likeButtonsOptions === 'hide' ? 'flex-start' : 'space-between'
-      } !important;
+        justify-content: ${
+          likeButtonsOptions === 'hide' ? 'flex-start' : 'space-between'
+        } !important;
       }`;
 
     document.head.appendChild(style);
@@ -427,17 +469,35 @@ async function onApiLoaded() {
   // Custom Fonts injection
   {
     const fontStyleId = 'glassy-custom-fonts';
-    let fontStyle = document.getElementById(fontStyleId) as HTMLStyleElement | null;
+    let fontStyle = document.getElementById(
+      fontStyleId,
+    ) as HTMLStyleElement | null;
     if (!fontStyle) {
       fontStyle = document.createElement('style');
       fontStyle.id = fontStyleId;
       document.head.appendChild(fontStyle);
     }
 
-    const applyCustomFonts = (cfg: {
-      youtubeUI: { enabled: boolean; useGoogleFont?: boolean; family: string; size: number; sizeUnit: string; weight: number };
-      lyrics: { enabled: boolean; useGoogleFont?: boolean; family: string; size: number; sizeUnit: string; weight: number };
-    } | null) => {
+    const applyCustomFonts = (
+      cfg: {
+        youtubeUI: {
+          enabled: boolean;
+          useGoogleFont?: boolean;
+          family: string;
+          size: number;
+          sizeUnit: string;
+          weight: number;
+        };
+        lyrics: {
+          enabled: boolean;
+          useGoogleFont?: boolean;
+          family: string;
+          size: number;
+          sizeUnit: string;
+          weight: number;
+        };
+      } | null,
+    ) => {
       if (!fontStyle) return;
       if (!cfg) {
         fontStyle.textContent = '';
@@ -459,9 +519,12 @@ async function onApiLoaded() {
 
       if (yt?.enabled) {
         const family = sanitize(yt.family || 'Inter');
-        const size = (Number.isFinite(yt.size) && yt.size > 0) ? yt.size : 14;
+        const size = Number.isFinite(yt.size) && yt.size > 0 ? yt.size : 14;
         const unit = yt.sizeUnit === 'rem' ? 'rem' : 'px';
-        const weight = (Number.isFinite(yt.weight) && yt.weight >= 100 && yt.weight <= 900) ? yt.weight : 400;
+        const weight =
+          Number.isFinite(yt.weight) && yt.weight >= 100 && yt.weight <= 900
+            ? yt.weight
+            : 400;
 
         if (yt.useGoogleFont) {
           imports += getGoogleUrl(family, weight) + '\n';
@@ -487,9 +550,12 @@ async function onApiLoaded() {
 
       if (ly?.enabled) {
         const family = sanitize(ly.family || 'Satoshi');
-        const size = (Number.isFinite(ly.size) && ly.size > 0) ? ly.size : 3;
+        const size = Number.isFinite(ly.size) && ly.size > 0 ? ly.size : 3;
         const unit = ly.sizeUnit === 'rem' ? 'rem' : 'px';
-        const weight = (Number.isFinite(ly.weight) && ly.weight >= 100 && ly.weight <= 900) ? ly.weight : 700;
+        const weight =
+          Number.isFinite(ly.weight) && ly.weight >= 100 && ly.weight <= 900
+            ? ly.weight
+            : 700;
 
         if (ly.useGoogleFont) {
           imports += getGoogleUrl(family, weight) + '\n';
@@ -515,9 +581,12 @@ async function onApiLoaded() {
 
     // Listen for live updates from main process
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    window.ipcRenderer.on('peard:custom-fonts-changed', (_: unknown, data: any) => {
-      applyCustomFonts(data);
-    });
+    window.ipcRenderer.on(
+      'peard:custom-fonts-changed',
+      (_: unknown, data: any) => {
+        applyCustomFonts(data);
+      },
+    );
   }
 }
 

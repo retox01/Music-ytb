@@ -20,7 +20,7 @@ async function runImport(
   songControls: ReturnType<typeof getSongControls>,
 ): Promise<void> {
   const log: { ok: boolean; title: string; artist: string }[] = [];
-  let found = 0;
+  const videoIds: string[] = [];
 
   for (const track of playlist.tracks) {
     pushImportState({
@@ -40,13 +40,42 @@ async function runImport(
     }
 
     if (videoId) {
+      // Still queued immediately, same as before — a working queue right
+      // now beats nothing if the playlist save below fails (e.g. not signed
+      // in), and the queue was already proven live.
       songControls.addSongToQueue(videoId, 'INSERT_AT_END');
-      found += 1;
+      videoIds.push(videoId);
     }
     log.push({ ok: !!videoId, title: track.title, artist: track.artist });
   }
 
-  pushImportState({ phase: 'done', found, total: playlist.tracks.length, log });
+  if (videoIds.length === 0) {
+    pushImportState({
+      phase: 'error',
+      message: 'Aucun morceau trouvé sur YouTube Music pour cette playlist.',
+    });
+    return;
+  }
+
+  pushImportState({ phase: 'saving', total: playlist.tracks.length, log });
+
+  // Requires being signed into a Google account in the app — VERIFIED live:
+  // when not signed in, this resolves (doesn't throw) with
+  // `{ error: { code: 401, status: 'UNAUTHENTICATED', ... } }`. The queue
+  // above already worked regardless, so this failing isn't a total loss.
+  const result = await songControls.createPlaylist(playlist.name, videoIds);
+  pushImportState({
+    phase: 'done',
+    found: videoIds.length,
+    total: playlist.tracks.length,
+    log,
+    playlistName: playlist.name,
+    playlistError: result.error
+      ? result.error.status === 'UNAUTHENTICATED'
+        ? "Connecte-toi à ton compte Google dans l'app pour sauvegarder une vraie playlist (les morceaux sont quand même dans la file d'attente)."
+        : result.error.message
+      : undefined,
+  });
 }
 
 export const backend = createBackend({

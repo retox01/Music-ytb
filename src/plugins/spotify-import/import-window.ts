@@ -26,7 +26,15 @@ export type ImportState =
   | { phase: 'idle' }
   | { phase: 'preview'; name: string; coverUrl: string | null; total: number }
   | { phase: 'matching'; done: number; total: number; log: ImportLogEntry[] }
-  | { phase: 'done'; found: number; total: number; log: ImportLogEntry[] }
+  | { phase: 'saving'; total: number; log: ImportLogEntry[] }
+  | {
+      phase: 'done';
+      found: number;
+      total: number;
+      log: ImportLogEntry[];
+      playlistName: string;
+      playlistError?: string;
+    }
   | { phase: 'error'; message: string };
 
 const WINDOW_SIZE = { width: 420, height: 520 };
@@ -214,11 +222,23 @@ const IMPORT_HTML = `<!DOCTYPE html>
         barFill.style.width = pct + '%';
         progressText.textContent = state.done + ' / ' + state.total;
         renderLog(state.log);
+      } else if (state.phase === 'saving') {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Sauvegarde de la playlist…';
+        barFill.style.width = '100%';
+        progressText.textContent = 'Création de la playlist sur YouTube Music…';
+        renderLog(state.log);
       } else if (state.phase === 'done') {
         confirmBtn.disabled = false;
         confirmBtn.textContent = 'Réimporter';
         barFill.style.width = '100%';
-        progressText.textContent = state.found + ' / ' + state.total + " morceaux ajoutés à la file d'attente 🎉";
+        progressText.textContent = state.found + ' / ' + state.total + ' morceaux ajoutés';
+        if (state.playlistError) {
+          errorEl.style.display = '';
+          errorEl.textContent = state.playlistError;
+        } else {
+          progressText.textContent += ' — playlist "' + state.playlistName + '" sauvegardée sur YouTube Music 🎉';
+        }
         renderLog(state.log);
       } else if (state.phase === 'error') {
         watchState.style.display = 'flex';
