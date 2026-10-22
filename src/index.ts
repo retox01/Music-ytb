@@ -60,6 +60,10 @@ import {
   isSplashWindow,
   setSplashStatus,
 } from '@/providers/splash';
+import {
+  openUpdaterWindow,
+  pushUpdaterState,
+} from '@/providers/updater-window';
 import { setUpTray } from '@/tray';
 import { LoggerPrefix } from '@/utils';
 import { isTesting } from '@/utils/testing';
@@ -161,14 +165,9 @@ if (is.linux()) {
   }
 
   // Overrides WM_CLASS for X11 to correspond to icon filename
-  app.setName(
-    'glassymusic.nankill',
-  );
+  app.setName('glassymusic.nankill');
   // for wayland
-  app.commandLine.appendSwitch(
-    'class',
-    'glassymusic.nankill',
-  );
+  app.commandLine.appendSwitch('class', 'glassymusic.nankill');
 }
 
 if (disableHardwareAcceleration) {
@@ -221,9 +220,27 @@ electronDebug({
 
 let icon = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 if (process.platform === 'win32') {
-  icon = path.join(__dirname, '..', '..', 'assets', 'generated', 'icons', 'win', 'icon.ico');
+  icon = path.join(
+    __dirname,
+    '..',
+    '..',
+    'assets',
+    'generated',
+    'icons',
+    'win',
+    'icon.ico',
+  );
 } else if (process.platform === 'darwin') {
-  icon = path.join(__dirname, '..', '..', 'assets', 'generated', 'icons', 'mac', 'icon.icns');
+  icon = path.join(
+    __dirname,
+    '..',
+    '..',
+    'assets',
+    'generated',
+    'icons',
+    'mac',
+    'icon.icns',
+  );
 }
 
 function onClosed() {
@@ -411,7 +428,9 @@ async function createMainWindow() {
     icon,
     width: windowSize.width,
     height: windowSize.height,
-    ...(config.get('options.disableMinSize') ? {} : { minWidth: 1280, minHeight: 720 }),
+    ...(config.get('options.disableMinSize')
+      ? {}
+      : { minWidth: 1280, minHeight: 720 }),
     backgroundColor: '#000',
     show: false,
     webPreferences: {
@@ -423,10 +442,10 @@ async function createMainWindow() {
       ...(isTesting()
         ? undefined
         : {
-          // Sandbox is only enabled in tests for now
-          // See https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
-          sandbox: false,
-        }),
+            // Sandbox is only enabled in tests for now
+            // See https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
+            sandbox: false,
+          }),
     },
     ...decorations,
   };
@@ -457,10 +476,10 @@ async function createMainWindow() {
     const scaledY = windowY;
 
     if (
-      scaledX + (scaledWidth / 2) < display.bounds.x - 8 || // Left
-      scaledX + (scaledWidth / 2) > display.bounds.x + display.bounds.width || // Right
+      scaledX + scaledWidth / 2 < display.bounds.x - 8 || // Left
+      scaledX + scaledWidth / 2 > display.bounds.x + display.bounds.width || // Right
       scaledY < display.bounds.y - 8 || // Top
-      scaledY + (scaledHeight / 2) > display.bounds.y + display.bounds.height // Bottom
+      scaledY + scaledHeight / 2 > display.bounds.y + display.bounds.height // Bottom
     ) {
       // Window is offscreen
       if (is.dev()) {
@@ -584,7 +603,7 @@ async function createMainWindow() {
         ...defaultTitleBarOverlayOptions,
         height: Math.floor(
           defaultTitleBarOverlayOptions.height! *
-          win.webContents.getZoomFactor(),
+            win.webContents.getZoomFactor(),
         ),
       });
     }
@@ -795,7 +814,10 @@ app.whenReady().then(async () => {
   };
   app.on('gpu-info-update', () => logGpuFeatureStatus('gpu-info-update'));
   setTimeout(
-    () => logGpuFeatureStatus('no gpu-info-update within 10s — GPU process may be absent'),
+    () =>
+      logGpuFeatureStatus(
+        'no gpu-info-update within 10s — GPU process may be absent',
+      ),
     10_000,
   );
 
@@ -830,8 +852,7 @@ app.whenReady().then(async () => {
 
   // Register appID on windows
   if (is.windows()) {
-    const appID =
-      'glassy-music-nankill';
+    const appID = 'glassy-music-nankill';
     app.setAppUserModelId(appID);
     const appLocation = process.execPath;
     const appData = app.getPath('appData');
@@ -965,53 +986,50 @@ app.whenReady().then(async () => {
   });
 
   if (!is.dev() && config.get('options.autoUpdates')) {
+    // Was: a native dialog whose "Download" button just opened the GitHub
+    // releases page for the user to download and run by hand — exactly the
+    // manual step this replaces. Now: downloads automatically with a real
+    // progress window (see @/providers/updater-window), then installs
+    // itself (10s auto-countdown, or the user can trigger/skip it).
+    electronUpdater.autoUpdater.autoDownload = true;
+    electronUpdater.autoUpdater.autoInstallOnAppQuit = true;
+
     const updateTimeout = setTimeout(() => {
-      electronUpdater.autoUpdater.checkForUpdatesAndNotify();
+      electronUpdater.autoUpdater.checkForUpdates();
       clearTimeout(updateTimeout);
     }, 2000);
-    electronUpdater.autoUpdater.on('update-available', () => {
-      const downloadLink =
-        'https://github.com/NanKillBro/glassy-music-nankill/releases/latest';
-      const dialogOptions: Electron.MessageBoxOptions = {
-        type: 'info',
-        buttons: [
-          t('main.dialog.update-available.buttons.ok'),
-          t('main.dialog.update-available.buttons.download'),
-          t('main.dialog.update-available.buttons.disable'),
-        ],
-        title: t('main.dialog.update-available.title'),
-        message: t('main.dialog.update-available.message'),
-        detail: t('main.dialog.update-available.detail', { downloadLink }),
-        defaultId: 1,
-        cancelId: 0,
-      };
 
-      let dialogPromise: Promise<Electron.MessageBoxReturnValue>;
-      if (mainWindow) {
-        dialogPromise = dialog.showMessageBox(mainWindow, dialogOptions);
-      } else {
-        dialogPromise = dialog.showMessageBox(dialogOptions);
-      }
-
-      dialogPromise.then((dialogOutput) => {
-        switch (dialogOutput.response) {
-          // Download
-          case 1: {
-            shell.openExternal(downloadLink);
-            break;
-          }
-
-          // Disable updates
-          case 2: {
-            config.set('options.autoUpdates', false);
-            break;
-          }
-
-          case 0: {
-            break;
-          }
-        }
+    electronUpdater.autoUpdater.on('update-available', (info) => {
+      openUpdaterWindow(
+        mainWindow,
+        () => electronUpdater.autoUpdater.quitAndInstall(),
+        () => {
+          /* "Plus tard": nothing to do — autoInstallOnAppQuit installs it
+             next time the app actually quits, no manual step needed either way. */
+        },
+      ).then(() => {
+        pushUpdaterState({
+          phase: 'downloading',
+          percent: 0,
+          bytesPerSecond: 0,
+          version: info.version,
+        });
       });
+    });
+    electronUpdater.autoUpdater.on('download-progress', (progress) => {
+      pushUpdaterState({
+        phase: 'downloading',
+        percent: progress.percent,
+        bytesPerSecond: progress.bytesPerSecond,
+      });
+    });
+    electronUpdater.autoUpdater.on('update-downloaded', (info) => {
+      pushUpdaterState({ phase: 'ready', version: info.version });
+    });
+    electronUpdater.autoUpdater.on('error', (err) => {
+      pushUpdaterState({ phase: 'error', message: err.message });
+      // shortcut: leaves the error visible in the small window rather than
+      // auto-closing it — the user can read it, nothing else to act on here.
     });
   }
 

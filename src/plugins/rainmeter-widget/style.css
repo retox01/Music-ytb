@@ -1,0 +1,40 @@
+/**
+ * Rainmeter widget — eco-mode styles only, applied inside the MAIN window.
+ *
+ * The compact widget UI itself lives entirely in the companion window's own
+ * standalone page (see widget-window.ts's WIDGET_HTML) — it is a separate
+ * BrowserWindow, not something injected into this app's own DOM, so there is
+ * nothing to style for it here.
+ *
+ * `rainmeter-eco` toggles a low-power visual mode (no shader/no blur/
+ * throttled rAF) via renderer.ts's applyEcoMode() — not currently invoked
+ * automatically by anything in this plugin (see renderer.ts's file header),
+ * left available for whoever wires it up next.
+ *
+ * Deliberately NOT a blanket `*{animation:none}`: Better Lyrics' default
+ * scrolling mode ('glassyflow-turbo', see src/plugins/better-lyrics/index.ts)
+ * drives the karaoke line highlight via Web Animations keyframes, which must
+ * keep running. Only backdrop-filter (confirmed glass-blur mechanism, see
+ * settings-theme.ts) and decorative ::before/::after glow overlays (the same
+ * file's `#glassy-wrapper::before/::after` pattern) are killed here.
+ */
+
+html.rainmeter-eco * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.rainmeter-eco *::before,
+html.rainmeter-eco *::after {
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+}
+
+html.rainmeter-eco canvas[data-rainmeter-eco-killed] {
+  /* Set by pauseShaderCanvases() in renderer.ts on the canvases whose WebGL
+     context it actually force-lost; hides the last painted frame. Scoped to
+     this attribute (not a blanket `canvas` selector) so any unrelated canvas
+     elsewhere on the page is left alone. */
+  visibility: hidden !important;
+}

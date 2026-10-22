@@ -799,6 +799,10 @@
         }
       }
     },
+    "rainmeter-widget": {
+      "description": "Turns the main window into a Rainmeter-style desktop widget: pinned behind other windows, hidden from the taskbar, with an optional click-through mode. Alt+Shift+W toggles widget mode, Alt+Shift+L toggles click-through",
+      "name": "Rainmeter Widget"
+    },
     "scrobbler": {
       "description": "Add scrobbling support (etc. last.fm, Listenbrainz)",
       "dialog": {

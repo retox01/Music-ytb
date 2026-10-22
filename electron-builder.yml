@@ -2,8 +2,13 @@ appId: "glassy-music-nankill"
 productName: "Glassy Music"
 publish:
   provider: github
-  owner: NanKillBro
-  repo: glassy-music-nankill
+  owner: retox01
+  repo: Music-ytb
+  # Default is "draft": the release sits hidden on GitHub until someone manually
+  # clicks "Publish" there, and electron-updater can't see drafts — nobody would
+  # ever get the update. "release" publishes it live the moment the build+upload
+  # finishes, so `pnpm release:win` alone is the whole process, as asked.
+  releaseType: release
 files:
   - '!*'
   - dist
