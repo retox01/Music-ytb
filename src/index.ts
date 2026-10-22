@@ -61,6 +61,7 @@ import {
   setSplashStatus,
 } from '@/providers/splash';
 import {
+  consumeManualCheckFlag,
   openUpdaterWindow,
   pushUpdaterState,
 } from '@/providers/updater-window';
@@ -1025,6 +1026,19 @@ app.whenReady().then(async () => {
     });
     electronUpdater.autoUpdater.on('update-downloaded', (info) => {
       pushUpdaterState({ phase: 'ready', version: info.version });
+    });
+    electronUpdater.autoUpdater.on('update-not-available', () => {
+      // Stays silent for the automatic launch-time check — only confirm when
+      // the About window's "Rechercher une mise à jour" button asked for it
+      // (see menu.ts's requestManualCheck()), otherwise this would pop up a
+      // dialog on every single app start.
+      if (consumeManualCheckFlag() && mainWindow) {
+        dialog.showMessageBox(mainWindow, {
+          type: 'info',
+          title: 'Mise à jour',
+          message: 'Tu as déjà la dernière version.',
+        });
+      }
     });
     electronUpdater.autoUpdater.on('error', (err) => {
       pushUpdaterState({ phase: 'error', message: err.message });

@@ -8,7 +8,10 @@ export default createPlugin({
   description: () => t('plugins.spotify-import.description'),
   restartNeeded: false,
   config: {
-    enabled: false,
+    // Default to on: a plugin that's off by default is invisible until
+    // someone finds the Plugins menu — the exact "I enabled it and nothing
+    // happened" confusion the widget had before its own default flipped.
+    enabled: true,
   },
   backend,
 });

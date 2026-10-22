@@ -22,6 +22,7 @@ import { isGlassyMergeTheme } from './plugins/better-lyrics/theme';
 import { restart } from './providers/app-controls';
 import { startingPages } from './providers/extracted-data';
 import promptOptions from './providers/prompt-options';
+import { requestManualCheck } from './providers/updater-window';
 
 import packageJson from '../package.json';
 import aboutHtmlRaw from './about.html?raw';
@@ -150,8 +151,11 @@ const openAboutWindow = (parentWin: BrowserWindow) => {
       // Same no-preload "signal via document.title" trick as the close
       // button below — this window has no IPC bridge set up, and adding one
       // just for this would be more code than reusing the existing hack.
-      // Feedback is implicit: an update window pops up (see src/index.ts's
-      // autoUpdater listeners) if one is found; nothing to show otherwise.
+      // Feedback: an update window pops up (see src/index.ts's autoUpdater
+      // listeners) if one is found; requestManualCheck() makes the "nothing
+      // found" case show a real confirmation dialog too (see index.ts's
+      // 'update-not-available' handler) instead of staying silent.
+      requestManualCheck();
       electronUpdater.autoUpdater.checkForUpdates();
       return;
     }

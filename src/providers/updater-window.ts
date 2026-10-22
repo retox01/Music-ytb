@@ -199,6 +199,23 @@ contextBridge.exposeInMainWorld('updaterWindow', {
 let updaterWin: BrowserWindow | null = null;
 let handlersBound = false;
 
+// Set by the About window's "Rechercher une mise à jour" button (see
+// menu.ts) right before calling checkForUpdates(), so the 'update-not-
+// available' listener (src/index.ts) knows to actually tell the user —
+// the automatic launch-time check stays silent either way, nobody asked
+// to be told "you're already up to date" every time they open the app.
+let manualCheckRequested = false;
+
+export function requestManualCheck(): void {
+  manualCheckRequested = true;
+}
+
+export function consumeManualCheckFlag(): boolean {
+  const was = manualCheckRequested;
+  manualCheckRequested = false;
+  return was;
+}
+
 /**
  * Opens the update window (no-op if already open) and wires its two actions.
  * `onInstallNow` is called when the user clicks "Redémarrer et installer" (or
